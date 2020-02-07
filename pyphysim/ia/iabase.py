@@ -56,7 +56,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
     # (marked as abstract) must be implemented in a subclass.
     __metaclass__ = ABCMeta
 
-    def __init__(self, multiUserChannel):
+    def __init__(self, multiUserChannel: muchannels.MultiUserChannelMatrix):
         # xxxxxxxxxx Private attributes xxxxxxxxxxxxxxx
         if not isinstance(multiUserChannel, muchannels.MultiUserChannelMatrix):
             raise ValueError("multiUserChannel must be an object of the "
@@ -65,10 +65,10 @@ class IASolverBaseClass:  # pylint: disable=R0902
         self._multiUserChannel = multiUserChannel
 
         # Number of streams per user
-        self._Ns = None
+        self._Ns: np.ndarray
         # Power of each user (P is an 1D numpy array). If not set (_P is
         # None), then a power of 1 will be used for each transmitter.
-        self._P = None
+        self._P: np.ndarray
 
         # xxxxxxxxxx Precoder and receive filters xxxxxxxxxxxxxxxxxxxxxxxxx
         # These are numpy arrays of numpy arrays
@@ -286,7 +286,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
         return self._W_H
 
     @property
-    def full_W_H(self,):
+    def full_W_H(self, ):
         """
         Get method for the full_W_H property.
 
@@ -317,7 +317,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
         return self._full_W_H
 
     @property
-    def full_W(self,):
+    def full_W(self, ):
         """
         Get method for the full_W property.
 
@@ -400,7 +400,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
         return Hk_eq
 
     @property
-    def P(self):
+    def P(self) -> np.ndarray:
         """
         Transmit power of all users.
 
@@ -410,10 +410,9 @@ class IASolverBaseClass:  # pylint: disable=R0902
             The power of all users.
         """
         if self._P is None:
-            P = np.ones(self.K, dtype=float)
-        else:
-            P = self._P
-        return P
+            return np.ones(self.K, dtype=float)
+
+        return self._P
 
     @P.setter
     def P(self, value):
