@@ -245,6 +245,7 @@ class RootSequence:
                                  "be provided.")
         if size is None:
             size = Nzc
+        assert(isinstance(size, int))
 
         if Nzc is None:
             Nzc = self._get_largest_prime_lower_than_number(size)
@@ -254,8 +255,8 @@ class RootSequence:
                                  "then size must be greater than Nzc")
 
         self._root_index = root_index
-        self._seq_array = None
-        self._extended_seq_array = None  # Extended Zadoff-Chu sequence
+        self._seq_array: np.ndarray
+        self._extended_seq_array: np.ndarray  # Extended Zadoff-Chu sequence
 
         if size > 2 * self.n_sc_PRB:
             # If size is greater then 2 * n_sc_PRB, the root
@@ -279,7 +280,7 @@ class RootSequence:
                 raise AttributeError("Invalid root sequence size")
 
     @staticmethod
-    def _get_largest_prime_lower_than_number(seq_size):
+    def _get_largest_prime_lower_than_number(seq_size: int) -> int:
         """
         Get the largest prime number lower than `seq_size`.
 
@@ -294,10 +295,10 @@ class RootSequence:
             The largest prime number lower than `seq_size`.
         """
         p = _SMALL_PRIME_LIST[_SMALL_PRIME_LIST <= seq_size][-1]
-        return p
+        return int(p)
 
     @property
-    def Nzc(self):
+    def Nzc(self) -> int:
         """
         Get the size of the Zadoff-Chu sequence (without any extension).
 
@@ -309,7 +310,7 @@ class RootSequence:
         return self._seq_array.size
 
     @property
-    def size(self):
+    def size(self) -> int:
         """
         Return the size (with extension) of the sequence.
 
@@ -336,7 +337,7 @@ class RootSequence:
             return self._extended_seq_array.size
 
     @property
-    def index(self):
+    def index(self) -> int:
         """
         Return the SRS root sequence index.
 
@@ -347,7 +348,7 @@ class RootSequence:
         """
         return self._root_index
 
-    def seq_array(self):
+    def seq_array(self) -> np.ndarray:
         """
         Get the extended Zadoff-Chu root sequence as a numpy array.
 
@@ -369,7 +370,7 @@ class RootSequence:
     # TODO: Make these operation methods (add, mul, etc) also work with
     # RootSequence objects returning a new RootSequence object. Change the
     # docstring type information when you do that.
-    def __add__(self, other):  # pragma: no cover
+    def __add__(self, other: np.ndarray) -> np.ndarray:  # pragma: no cover
         """
         Perform addition with `other`.
 
@@ -383,7 +384,7 @@ class RootSequence:
         """
         return self.seq_array() + other
 
-    def __radd__(self, other):  # pragma: no cover
+    def __radd__(self, other: np.ndarray) -> np.ndarray:  # pragma: no cover
         """
         Perform addition with `other`.
 
@@ -397,7 +398,7 @@ class RootSequence:
         """
         return self.seq_array() + other
 
-    def __mul__(self, other):  # pragma: no cover
+    def __mul__(self, other: np.ndarray) -> np.ndarray:  # pragma: no cover
         """
         Perform multiplication with `other`.
 
@@ -411,7 +412,7 @@ class RootSequence:
         """
         return self.seq_array() * other
 
-    def __rmul__(self, other):  # pragma: no cover
+    def __rmul__(self, other: np.ndarray) -> np.ndarray:  # pragma: no cover
         """
         Perform multiplication with `other`.
 
@@ -439,7 +440,7 @@ class RootSequence:
         """
         return self.seq_array()[val]
 
-    def conjugate(self):  # pragma: no cover
+    def conjugate(self) -> np.ndarray:  # pragma: no cover
         """
         Return the conjugate of the root sequence as a numpy array.
 
@@ -450,7 +451,7 @@ class RootSequence:
         """
         return self.seq_array().conj()
 
-    def conj(self):  # pragma: no cover
+    def conj(self) -> np.ndarray:  # pragma: no cover
         """
         Return the conjugate of the root sequence as a numpy array.
 
@@ -462,7 +463,7 @@ class RootSequence:
 
         return self.seq_array().conj()
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         """
         Get the representation of the object.
 

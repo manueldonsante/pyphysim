@@ -12,12 +12,15 @@ try:
 except ImportError:  # pragma: no cover
     _MATPLOTLIB_AVAILABLE = False
 
-from collections import Iterable
+from collections.abs import Iterable
 import numpy as np
 import itertools
 from io import BytesIO
 import cmath
 import math
+from typing import Optional, Union, List, Type, Dict
+from typing import Iterable as Iterable_t  # distinguish it from collections.abc.Iterable
+
 
 from ..cell import shapes
 
@@ -46,18 +49,18 @@ class Node(shapes.Coordinate):
         The color that will be used to plot the marker representing the
         Node. This color should be something that matplotlib can
         understand, such as 'r' for the color red, for instance.
-    cell_id : int
+    cell_id : str, int, optional
         The ID of the cell where the Node is located.
     parent_pos : complex
         The position of the cell where the Node is located (if any).
     """
 
     def __init__(self,
-                 pos,
-                 plot_marker='*',
-                 marker_color='r',
-                 cell_id=None,
-                 parent_pos=None):
+                 pos: complex,
+                 plot_marker: str='*',
+                 marker_color: str='r',
+                 cell_id: Optional[Union[str, int]]=None,
+                 parent_pos: complex=None):
         shapes.Coordinate.__init__(self, pos)
         self.plot_marker = plot_marker
         self.marker_color = marker_color
@@ -66,12 +69,12 @@ class Node(shapes.Coordinate):
         # ID of the cell where the user is located
         self.cell_id = cell_id
 
-        self._relative_pos = None
+        self._relative_pos: complex
         if parent_pos is not None:
             self._relative_pos = pos - parent_pos
 
     @property
-    def relative_pos(self):
+    def relative_pos(self) -> complex:
         """
         Get method for the relative_pos property.
 
@@ -133,17 +136,17 @@ class AccessPoint(Node):
     ----------
     pos : complex
         The central position of the cell in the complex grid.
-    ap_id : int, optional
+    ap_id : int, str, optional
         The AccessPoint ID. If not provided the access point won't have
         an ID and its plot will shown a symbol at the access point
         location instead of the ID.
     """
 
-    def __init__(self, pos, ap_id=None):
+    def __init__(self, pos: complex, ap_id: Optional[Union[int, str]]=None):
         Node.__init__(self, pos, plot_marker='^', marker_color='b')
 
         # List to store the users associated with this access point
-        self._users = []
+        self._users: List[Node] = []
 
         # ID of the access point
         self.id = ap_id
@@ -151,7 +154,7 @@ class AccessPoint(Node):
         # xxxxx Appearance for plotting xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         # Set this to a number. If None, default value for Matplotlib will
         # be used.
-        self.id_fontsize = None
+        self.id_fontsize: int
         # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
     def __repr__(self):  # pragma: nocover
@@ -172,7 +175,7 @@ class AccessPoint(Node):
     # user. Notice how we are only changing the 'set' part of the property
     # defined in the Coordinate base class.
     @property
-    def pos(self):
+    def pos(self) -> complex:
         """
         Get the AccessPoint position.
 
@@ -184,7 +187,7 @@ class AccessPoint(Node):
         return self._pos
 
     @pos.setter
-    def pos(self, value):
+    def pos(self, value: complex):
         """
         Set the AccessPoint position.
 
@@ -199,7 +202,7 @@ class AccessPoint(Node):
             user.pos += diff
 
     @property
-    def num_users(self):
+    def num_users(self) -> int:
         """
         Get method for the num_users property.
 
@@ -211,7 +214,7 @@ class AccessPoint(Node):
         return len(self._users)
 
     @property
-    def users(self):
+    def users(self) -> List[Node]:
         """
         Get method for the users property.
 
@@ -227,7 +230,7 @@ class AccessPoint(Node):
         """
         self._users = []
 
-    def add_user(self, new_user, relative_pos_bool=True):
+    def add_user(self, new_user: Node, relative_pos_bool: bool=True):
         """
         Associate a new user with the access point.
 
@@ -313,18 +316,18 @@ class CellBase(AccessPoint, shapes.Shape):  # pylint: disable=W0223
         The central position of the cell in the complex grid.
     radius : float
         The cell radius.
-    cell_id : int, optional
+    cell_id : str, int, optional
         The cell ID. If not provided the cell won't have an ID and its
         plot will shown a symbol in cell center instead of the cell ID.
     rotation : float, optional
         The rotation of the cell (regarding the cell center).
     """
 
-    def __init__(self, pos, radius, cell_id=None, rotation=0):
+    def __init__(self, pos: complex, radius: float, cell_id: Optional[Union[str, int]]=None, rotation: float=0.0):
         AccessPoint.__init__(self, pos, ap_id=cell_id)
         shapes.Shape.__init__(self, pos, radius, rotation)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Representation of a CellBase object.
 
@@ -337,7 +340,7 @@ class CellBase(AccessPoint, shapes.Shape):  # pylint: disable=W0223
             self.__class__.__name__, self.pos, self.radius, self.id,
             self.rotation)
 
-    def add_user(self, new_user, relative_pos_bool=True):
+    def add_user(self, new_user: Node, relative_pos_bool: bool=True):
         """
         Adds a new user to the cell.
 
@@ -377,7 +380,7 @@ class CellBase(AccessPoint, shapes.Shape):  # pylint: disable=W0223
         else:
             raise TypeError("User must be Node object.")
 
-    def add_border_user(self, angles, ratio=None, user_color=None):
+    def add_border_user(self, angles: Union[float, Iterable_t[float]], ratio: Union[float, Iterable_t[float]]=None, user_color: Union[str, Iterable_t[str]]=None):
         """
         Adds a user at the border of the cell, located at a specified
         angle (in degrees).
@@ -408,30 +411,31 @@ class CellBase(AccessPoint, shapes.Shape):  # pylint: disable=W0223
         """
         # Assures that angle is an iterable
         if not isinstance(angles, Iterable):
+            assert(isinstance(angles, float))
             angles = [angles]
 
         if isinstance(user_color, str):
             user_color = itertools.repeat(user_color)
-        else:
-            if not isinstance(user_color, Iterable):
-                user_color = itertools.repeat(user_color)
-        if not isinstance(ratio, Iterable):
+        if isinstance(ratio, float):
             ratio = CellBase._validate_ratio(ratio)
             ratio = itertools.repeat(ratio)
         else:
+            assert(isinstance(ratio, Iterable))
             ratio = [CellBase._validate_ratio(i) for i in ratio]
 
+        assert(isinstance(ratio, Iterable))
+        assert(isinstance(user_color, Iterable))
         all_data = zip(angles, ratio, user_color)
         for data in all_data:
-            angle, ratio, user_color = data
-            new_user = Node(self.get_border_point(angle, ratio),
+            a, r, c = data
+            new_user = Node(self.get_border_point(a, r),
                             cell_id=self.id,
                             parent_pos=self.pos)
-            if user_color is not None:
-                new_user.marker_color = user_color
+            if c is not None:
+                new_user.marker_color = c
             self._users.append(new_user)
 
-    def add_random_user(self, user_color=None, min_dist_ratio=0):
+    def add_random_user(self, user_color: Optional[str]=None, min_dist_ratio: float=0.0):
         """
         Adds a user randomly located in the cell.
 
@@ -441,7 +445,7 @@ class CellBase(AccessPoint, shapes.Shape):  # pylint: disable=W0223
 
         Parameters
         ----------
-        user_color : str
+        user_color : str, optional
             Color of the user's marker.
         min_dist_ratio : float
             Minimum allowed (relative) distance between the cell center and
@@ -473,7 +477,7 @@ class CellBase(AccessPoint, shapes.Shape):  # pylint: disable=W0223
         # Finally add the user to the cell
         self.add_user(new_user, relative_pos_bool=False)
 
-    def add_random_users(self, num_users, user_color=None, min_dist_ratio=0):
+    def add_random_users(self, num_users: int, user_color: Optional[str]=None, min_dist_ratio: float=0.0):
         """
         Add `num_users` users randomly located in the cell.
 
@@ -481,7 +485,7 @@ class CellBase(AccessPoint, shapes.Shape):  # pylint: disable=W0223
         ----------
         num_users : int
             Number of users to be added to the cell.
-        user_color : str
+        user_color : str, optional
             Color of the user's marker.
         min_dist_ratio : float
             Minimum allowed (relative) distance between the cell center and
@@ -521,7 +525,7 @@ class CellBase(AccessPoint, shapes.Shape):  # pylint: disable=W0223
             ax.autoscale_view(False, True, True)
 
     @staticmethod
-    def _validate_ratio(ratio):
+    def _validate_ratio(ratio: float) -> float:
         """Return `ratio` if is valid, 1.0 if `ratio` is None, or throw an
         exception if it is not valid.
 
@@ -566,7 +570,7 @@ class Cell(shapes.Hexagon, CellBase):
         The central position of the cell in the complex grid.
     radius : float
         The cell radius.
-    cell_id : int, optional
+    cell_id : str, int, optional
         The cell ID. If not provided the cell won't have an ID and its
         plot will shown a symbol in cell center instead of the cell ID.
     rotation : float, optional
@@ -574,7 +578,7 @@ class Cell(shapes.Hexagon, CellBase):
     """
 
     # noinspection PyCallByClass
-    def __init__(self, pos, radius, cell_id=None, rotation=0):
+    def __init__(self, pos: complex, radius: float, cell_id: Optional[Union[str, int]]=None, rotation: float=0.0):
         shapes.Hexagon.__init__(self, pos, radius, rotation)
         CellBase.__init__(self, pos, radius, cell_id, rotation)
 
@@ -626,14 +630,14 @@ class Cell3Sec(CellBase):
     radius : float
         The cell radius. The sector radius will be equal to half the
         cell radius.
-    cell_id : int, optional
+    cell_id : str, int, optional
         The cell ID. If not provided the cell won't have an ID and its
         plot will shown a symbol in cell center instead of the cell ID.
     rotation : float, optional
         The rotation of the cell (regarding the cell center).
     """
 
-    def __init__(self, pos, radius, cell_id=None, rotation=0):
+    def __init__(self, pos: complex, radius: float, cell_id: Optional[Union[str, int]]=None, rotation: float=0.0):
         CellBase.__init__(self, pos, radius, cell_id, rotation)
 
         sec_positions = self._calc_sectors_positions()
@@ -651,7 +655,7 @@ class Cell3Sec(CellBase):
                           cell_id=None,
                           rotation=self.rotation - 30)
 
-    def _calc_sectors_positions(self):
+    def _calc_sectors_positions(self) -> np.ndarray:
         """
         Calculates the positions of the sectors with the current
         rotation, center position and radius.
@@ -664,7 +668,7 @@ class Cell3Sec(CellBase):
         secradius = self.secradius
         h = secradius * (np.sqrt(3) / 2.0)
 
-        sec_positions = np.empty(3, dtype=complex)
+        sec_positions: np.ndarray = np.empty(3, dtype=complex)
         sec_positions[0] = 0 - h - (0.5j * secradius)
         sec_positions[1] = 0 + h - (0.5j * secradius)
         sec_positions[2] = 0 + (1j * secradius)
@@ -675,7 +679,7 @@ class Cell3Sec(CellBase):
         return sec_positions
 
     @property
-    def radius(self):
+    def radius(self) -> float:
         """
         Get the radius of the Cell3Sec object.
 
@@ -687,7 +691,7 @@ class Cell3Sec(CellBase):
         return self._radius
 
     @radius.setter
-    def radius(self, value):
+    def radius(self, value: float):
         """
         Set the radius of the Cell3Sec object.
 
@@ -714,7 +718,7 @@ class Cell3Sec(CellBase):
         self._sec3.pos = sec_positions[2]
 
     @property
-    def rotation(self):
+    def rotation(self) -> float:
         """
         Get method for the rotation property.
 
@@ -726,7 +730,7 @@ class Cell3Sec(CellBase):
         return self._rotation
 
     @rotation.setter
-    def rotation(self, value):
+    def rotation(self, value: float):
         """
         Set method for the rotation property.
 
@@ -750,7 +754,7 @@ class Cell3Sec(CellBase):
         self._sec3.pos = sec_positions[2]
 
     @property
-    def pos(self):
+    def pos(self) -> complex:
         """
         Get the Cell3Sec position.
 
@@ -762,7 +766,7 @@ class Cell3Sec(CellBase):
         return self._pos
 
     @pos.setter
-    def pos(self, value):
+    def pos(self, value: complex):
         """
         Set the Cell3Sec position.
 
@@ -784,7 +788,7 @@ class Cell3Sec(CellBase):
         self._sec3.pos = sec_positions[2]
 
     @property
-    def secradius(self):
+    def secradius(self) -> float:
         """
         Get method for the secradius property.
 
@@ -801,7 +805,7 @@ class Cell3Sec(CellBase):
         # to `r`.
         return np.sqrt(3) * self.radius / 3.0
 
-    def _get_vertex_positions(self):
+    def _get_vertex_positions(self) -> np.ndarray:
         """
         Calculates the vertex positions ignoring any rotation and
         considering that the shape is at the origin (rotation and
@@ -831,14 +835,14 @@ class Cell3Sec(CellBase):
             sec1.vertices[[0, 1]], sec2.vertices[[0, 1, 2, 3]],
             sec3.vertices[[2, 3, 4, 5]], sec1.vertices[[4, 5]]
         ]
-        all_vertexes = np.hstack(aux)
+        all_vertexes: np.ndarray = np.hstack(aux)
 
         return all_vertexes
 
     def add_random_user_in_sector(self,
-                                  sector,
-                                  user_color=None,
-                                  min_dist_ratio=0):
+                                  sector: int,
+                                  user_color: Optional[str]=None,
+                                  min_dist_ratio: float=0.0):
         """
         Adds a user randomly located in the specified `sector` of the cell.
 
@@ -851,10 +855,6 @@ class Cell3Sec(CellBase):
         min_dist_ratio : float
             Minimum allowed (relative) distance between the cell center and
             the generated random user. The value must be between 0 and 0.7.
-
-        Returns
-        -------
-        None
         """
         if sector == 1:
             sec = self._sec1
@@ -870,10 +870,10 @@ class Cell3Sec(CellBase):
         sec.delete_all_users()
 
     def add_random_users_in_sector(self,
-                                   num_users,
-                                   sector,
-                                   user_color=None,
-                                   min_dist_ratio=0):
+                                   num_users: int,
+                                   sector: int,
+                                   user_color: Optional[str]=None,
+                                   min_dist_ratio: float=0.0):
         """
         Add `num_users` users randomly in the specified `sector` of the
         cell
@@ -971,7 +971,7 @@ class CellSquare(shapes.Rectangle, CellBase):
         The central position of the cell in the complex grid.
     side_length : float
         The cell side length.
-    cell_id : int, optional
+    cell_id : str, int, optional
         The cell ID. If not provided the cell won't have an ID and its
         plot will shown a symbol in cell center instead of the cell ID.
     rotation : float, optional
@@ -979,7 +979,7 @@ class CellSquare(shapes.Rectangle, CellBase):
     """
 
     # noinspection PyCallByClass
-    def __init__(self, pos, side_length, cell_id=None, rotation=0):
+    def __init__(self, pos: complex, side_length: float, cell_id: Optional[Union[str, int]]=None, rotation: float=0.0):
         half_side = side_length / 2.
         shapes.Rectangle.__init__(self, pos - half_side - 1j * half_side,
                                   pos + half_side + 1j * half_side, rotation)
@@ -1021,7 +1021,7 @@ class CellSquare(shapes.Rectangle, CellBase):
         else:
             ax.autoscale_view(False, True, True)
 
-    def add_user(self, new_user, relative_pos_bool=True):
+    def add_user(self, new_user: Node, relative_pos_bool: bool=True):
         """
         Adds a new user to the cell.
 
@@ -1032,10 +1032,6 @@ class CellSquare(shapes.Rectangle, CellBase):
         relative_pos_bool : bool, optional
             Indicates if the 'pos' attribute of the `new_user` is relative
             to the center of the cell or not.
-
-        Returns
-        -------
-        None
 
         Raises
         ------
@@ -1082,7 +1078,7 @@ class CellWrap(CellBase):
         the wrapped version.
     """
 
-    def __init__(self, pos, wrapped_cell, include_users_bool=False):
+    def __init__(self, pos: complex, wrapped_cell: CellBase, include_users_bool: bool=False):
         assert isinstance(wrapped_cell, CellBase), \
             'wrapped_cell must be a subclass of CellBase'
         # Except for the _wrapped_cell member variable below, all other
@@ -1097,6 +1093,7 @@ class CellWrap(CellBase):
         # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         radius = wrapped_cell.radius
         rotation = wrapped_cell.rotation
+        cell_id: Optional[str]
         if wrapped_cell.id is not None:
             cell_id = "Wrap {0}".format(wrapped_cell.id)
         else:
@@ -1108,7 +1105,7 @@ class CellWrap(CellBase):
         # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
     @property
-    def radius(self):
+    def radius(self) -> float:
         """
         Get the radius of the CellWrap object.
 
@@ -1119,20 +1116,44 @@ class CellWrap(CellBase):
         """
         return self._wrapped_cell.radius
 
-    @property
-    def rotation(self):
+    @radius.setter
+    def radius(self, value: float):
         """
-        Get the radius of the CellWrap object.
+        Set the radius of the CellWrap object.
+
+        Parameters
+        ----------
+        value : float
+            The new radius of the CellWrap object.
+        """
+        self._wrapped_cell.radius = value
+
+    @property
+    def rotation(self) -> float:
+        """
+        Get the rotation of the CellWrap object.
 
         Returns
         -------
         float
-            The radius of the CellWrap object.
+            The rotation of the CellWrap object.
         """
         return self._wrapped_cell.rotation
 
+    @rotation.setter
+    def rotation(self, value: float):
+        """
+        Set method for the rotation property.
+
+        Parameters
+        ----------
+        value : float
+            The new rotation value.
+        """
+        self._wrapped_cell.rotation = value
+
     @property
-    def num_users(self):
+    def num_users(self) -> int:
         """
         Get method for the num_users property.
 
@@ -1147,7 +1168,7 @@ class CellWrap(CellBase):
             return 0
 
     @property
-    def users(self):
+    def users(self) -> List[Node]:
         """
         Get method for the users property.
 
@@ -1156,6 +1177,7 @@ class CellWrap(CellBase):
         list
             The users associated with the AccessPoint.
         """
+        users: List[Node]
         if self.include_users_bool is True:
             wrapped_cell_pos = self._wrapped_cell.pos
             users = [
@@ -1167,7 +1189,7 @@ class CellWrap(CellBase):
             users = []
         return users
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Representation of a CellWrap object.
 
@@ -1179,7 +1201,7 @@ class CellWrap(CellBase):
         return "{0}(pos={1},cell_id={2})".format(self.__class__.__name__,
                                                  self.pos, self.id)
 
-    def _get_vertex_positions(self):
+    def _get_vertex_positions(self) -> np.ndarray:
         """
         Calculates the vertex positions ignoring any rotation and
         considering that the shape is at the origin (rotation and
@@ -1269,15 +1291,15 @@ class Cluster(shapes.Shape):
 
     # Store cell positions in a cluster centered at the origin without any
     # rotation and with a radius equal to one.
-    _normalized_cell_positions = {}
+    _normalized_cell_positions: Dict[int, np.ndarray] = {}
 
     def __init__(self,
-                 cell_radius,
-                 num_cells,
-                 pos=0 + 0j,
-                 cluster_id=None,
-                 cell_type='simple',
-                 rotation=0.0):
+                 cell_radius: float,
+                 num_cells: int,
+                 pos: complex=0 + 0j,
+                 cluster_id: Optional[int]=None,
+                 cell_type: str='simple',
+                 rotation: float=0.0):
         shapes.Shape.__init__(self, pos, radius=0, rotation=0)
 
         # xxxxx Store for later reference (in __repr__) xxxxxxxxxxxxxxxxxxx
@@ -1289,20 +1311,20 @@ class Cluster(shapes.Shape):
         self._cell_radius = cell_radius
 
         # Cells in the cluster
-        self._cells = []
+        self._cells: List[CellBase] = []
 
         # Dictionary to store the wrapped cells (when wrap around is used)
-        self._wrapped_cells = {}
+        self._wrapped_cells: Dict[str, CellWrap] = {}
 
         # Each element is a list where the first element of that list if
         # the position of the corresponding cell. The subsequent elements
         # are the positions of that same cell wrapped somewhere.
-        self._cell_pos = []
+        self._cell_pos: List[complex] = []
 
         # This will be set later as a 2D numpy array with the difference of
         # the coordinates between each pair of cells (possibly considering
         # wrap around)
-        self._cell_pos_diffs = None
+        self._cell_pos_diffs: Iterable_t[complex]  # np.ndarray of complex numbers
 
         cell_positions = Cluster._calc_cell_positions(cell_radius, num_cells,
                                                       cell_type, rotation)
@@ -1310,6 +1332,7 @@ class Cluster(shapes.Shape):
         # position.
         cell_positions[:, 0] = cell_positions[:, 0] + self.pos
 
+        CELLCLASS: Type[CellBase]
         if cell_type == 'simple':
             CELLCLASS = Cell
         elif cell_type == '3sec':
@@ -1330,7 +1353,7 @@ class Cluster(shapes.Shape):
             c = CELLCLASS(cell_positions[index, 0], cell_radius, cell_id,
                           cell_positions[index, 1])
             self._cells.append(c)
-            self._cell_pos.append([c.pos])
+            self._cell_pos.append(c.pos)
 
         # Calculates the cluster radius.
         #
@@ -1623,10 +1646,10 @@ class Cluster(shapes.Shape):
         return Cluster._ii_and_jj.get(num_cells, (0, 0))
 
     @staticmethod
-    def _calc_cell_positions(cell_radius,
-                             num_cells,
-                             cell_type="simple",
-                             rotation=None):
+    def _calc_cell_positions(cell_radius: float,
+                             num_cells: int,
+                             cell_type: str="simple",
+                             rotation: Optional[float]=None) -> np.ndarray:
         """
         Helper function used by the Cluster class.
 
@@ -1712,7 +1735,7 @@ class Cluster(shapes.Shape):
                                                     rotation)
 
     @staticmethod
-    def _calc_cell_positions_hexagon(cell_radius, num_cells, rotation=None):
+    def _calc_cell_positions_hexagon(cell_radius: float, num_cells: int, rotation: Optional[float]=None) -> np.ndarray:
         """
         Helper function used by the Cluster class.
 
@@ -1752,7 +1775,7 @@ class Cluster(shapes.Shape):
             # The first column in cell_positions has the cell positions
             # (complex number) and the second column has the cell rotation
             # (only the real part is considered)
-            cell_positions = np.zeros([num_cells, 2], dtype=complex)
+            cell_positions: np.ndarray = np.zeros([num_cells, 2], dtype=complex)
             cell_height = Cluster._calc_cell_height(norm_radius)
 
             # xxxxx Get the positions of cells from 2 to 7 xxxxxxxxxxxxxxxx

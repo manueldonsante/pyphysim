@@ -4,7 +4,7 @@
 linear to dB, binary to gray code, as well as the inverse of them.
 """
 
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 from .misc import xor
 
@@ -15,7 +15,10 @@ __all__ = [
 ]
 
 
-def single_matrix_to_matrix_of_matrices(single_matrix, nrows=None, ncols=None):
+def single_matrix_to_matrix_of_matrices(single_matrix: np.ndarray,
+                                        nrows: Optional[np.ndarray] = None,
+                                        ncols: Optional[np.ndarray] = None
+                                        ) -> np.ndarray:
     """
     Converts a single numpy array to a numpy array of numpy arrays.
 
@@ -94,6 +97,8 @@ def single_matrix_to_matrix_of_matrices(single_matrix, nrows=None, ncols=None):
      [2 2]]
     """
     if nrows is None:
+        assert (isinstance(ncols, np.ndarray))
+
         # This is the case where we break the matrix into packs of columns
         K = ncols.size
         cumNcols = np.hstack([0, np.cumsum(ncols)])
@@ -127,18 +132,19 @@ def single_matrix_to_matrix_of_matrices(single_matrix, nrows=None, ncols=None):
         return output
 
 
-def dB2Linear(valueIndB):
+def dB2Linear(valueIndB: Union[int, float, np.ndarray]
+              ) -> Union[float, np.ndarray]:
     """
     Convert input from dB to linear scale.
 
     Parameters
     ----------
-    valueIndB : float | np.ndarray
+    valueIndB : int | float | np.ndarray
         Value in dB
 
     Returns
     -------
-    valueInLinear : float | np.ndarray
+    valueInLinear : int | float | np.ndarray
         Value in Linear scale.
 
     Examples
@@ -149,18 +155,19 @@ def dB2Linear(valueIndB):
     return pow(10, valueIndB / 10.0)
 
 
-def linear2dB(valueInLinear):
+def linear2dB(valueInLinear: Union[int, float, np.ndarray]
+              ) -> Union[float, np.ndarray]:
     """
     Convert input from linear to dB scale.
 
     Parameters
     ----------
-    valueInLinear : float | np.ndarray
+    valueInLinear : int | float | np.ndarray
         Value in Linear scale.
 
     Returns
     -------
-    valueIndB : float | np.ndarray
+    valueIndB : int | float | np.ndarray
         Value in dB scale.
 
     Examples
@@ -171,13 +178,14 @@ def linear2dB(valueInLinear):
     return 10.0 * np.log10(valueInLinear)
 
 
-def dBm2Linear(valueIndBm):
+def dBm2Linear(valueIndBm: Union[int, float, np.ndarray]
+               ) -> Union[float, np.ndarray]:
     """
     Convert input from dBm to linear scale.
 
     Parameters
     ----------
-    valueIndBm : float | np.ndarray
+    valueIndBm : int | float | np.ndarray
         Value in dBm.
 
     Returns
@@ -193,7 +201,8 @@ def dBm2Linear(valueIndBm):
     return dB2Linear(valueIndBm) / 1000.
 
 
-def linear2dBm(valueInLinear):
+def linear2dBm(valueInLinear: Union[int, float, np.ndarray]
+               ) -> Union[float, np.ndarray]:
     """
     Convert input from linear to dBm scale.
 
@@ -217,7 +226,7 @@ def linear2dBm(valueInLinear):
 
 # Code from wikipedia
 # http://en.wikipedia.org/wiki/Gray_code#Constructing_an_n-bit_Gray_code
-def binary2gray(num):
+def binary2gray(num: Union[int, np.ndarray]) -> Union[int, np.ndarray]:
     """
     Convert a number (in decimal format) to the corresponding Gray code
     (still in decimal format).
@@ -240,7 +249,7 @@ def binary2gray(num):
     return xor((num >> 1), num)
 
 
-def gray2binary(num):
+def gray2binary(num: Union[int, np.ndarray]) -> Union[int, np.ndarray]:
     """
     Convert a number in Gray code (in decimal format) to its original
     value (in decimal format).
