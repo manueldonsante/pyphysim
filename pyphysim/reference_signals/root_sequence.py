@@ -255,8 +255,8 @@ class RootSequence:
                                  "then size must be greater than Nzc")
 
         self._root_index = root_index
-        self._seq_array: np.ndarray
-        self._extended_seq_array: np.ndarray  # Extended Zadoff-Chu sequence
+        self._seq_array: np.ndarray = None
+        self._extended_seq_array: np.ndarray = None  # Extended Zadoff-Chu sequence
 
         if size > 2 * self.n_sc_PRB:
             # If size is greater then 2 * n_sc_PRB, the root

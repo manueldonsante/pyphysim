@@ -15,6 +15,8 @@ import pyphysim.channels.multiuser as muchannels
 from ..util.misc import randn_c_RS, leig
 from ..util.conversion import linear2dB
 
+from typing import Optional, Union, List
+
 
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # xxxxxxxxxxxxxxx Base Class for all IA Algorithms xxxxxxxxxxxxxxxxxxxxxxxx
@@ -533,7 +535,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
 
     # This method is just an alias for the get_channel method of the
     # multiuserchannel object associated with the IA Solver.xs
-    def _get_channel(self, k, l):
+    def _get_channel(self, k: int, l: int) -> np.ndarray:
         """
         Get the channel from transmitter l to receiver k.
 
@@ -551,7 +553,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
         """
         return self._multiUserChannel.get_Hkl(k, l)
 
-    def _get_channel_rev(self, k, l):
+    def _get_channel_rev(self, k: int, l: int) -> np.ndarray:
         """
         Get the channel from transmitter l to receiver k in the reverse
         network.
@@ -584,7 +586,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
         return self._get_channel(l, k).transpose().conjugate()
 
     # noinspection PyPep8
-    def calc_Q(self, k):
+    def calc_Q(self, k: int) -> np.ndarray:
         """
         Calculates the interference covariance matrix at the :math:`k`-th
         receiver.
@@ -619,7 +621,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
     # This method must be tested in a subclass of IASolverBaseClass, since
     # we need the receive filter and IASolverBaseClass does not know how to
     # calculate it
-    def calc_Q_rev(self, k):
+    def calc_Q_rev(self, k: int) -> np.ndarray:
         """
         Calculates the interference covariance matrix at the :math:`k`-th
         receiver in the reverse network.
@@ -653,7 +655,10 @@ class IASolverBaseClass:  # pylint: disable=R0902
         return Qk
 
     # noinspection PyPep8
-    def calc_remaining_interference_percentage(self, k, Qk=None):
+    def calc_remaining_interference_percentage(self,
+                                               k: int,
+                                               Qk: Optional[np.ndarray] = None
+                                               ) -> float:
         """
         Calculates the percentage of the interference in the desired signal
         space according to equation (30) in [Cadambe2008]_.
@@ -697,7 +702,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
         pk = np.sum(np.abs(D)) / np.trace(np.abs(Qk))
         return pk
 
-    def calc_SINR_old(self):
+    def calc_SINR_old(self) -> np.ndarray:
         """
         Calculates the SINR values (in linear scale) of all streams of all
         users with the current IA solution.
@@ -716,7 +721,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
             is a 1D numpy array of 1D numpy arrays (of floats).
         """
         K = self.K
-        SINRs = np.empty(K, dtype=np.ndarray)
+        SINRs: np.array = np.empty(K, dtype=np.ndarray)
 
         for j in range(K):
             numerator = 0.0
@@ -725,7 +730,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
             for i in range(K):
                 Hji = self._get_channel(j, i)
                 Fi = self.F[i]
-                aux = np.dot(Wj_H, np.dot(Hji, Fi))
+                aux: np.ndarray = np.dot(Wj_H, np.dot(Hji, Fi))
                 if i == j:
                     aux = np.dot(aux, aux.transpose().conjugate())
                     # Numerator will be a 1D numpy array with length equal
@@ -747,7 +752,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
 
         return SINRs
 
-    def calc_SINR(self):
+    def calc_SINR(self) -> np.ndarray:
         """
         Calculates the SINR values (in linear scale) of all streams of all
         users with the current IA solution.
@@ -770,7 +775,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
             SINRs[k] = self._calc_SINR_k(k, Bkl_all_l)
         return SINRs
 
-    def calc_SINR_in_dB(self):
+    def calc_SINR_in_dB(self) -> np.ndarray:
         """
         Calculates the SINR values (in dB scale) of all streams of all
         users with the current IA solution.
@@ -793,7 +798,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
             SINRs[k] = linear2dB(self._calc_SINR_k(k, Bkl_all_l))
         return SINRs
 
-    def calc_sum_capacity(self):
+    def calc_sum_capacity(self) -> float:
         """
         Calculates the sum capacity of the current solution.
 
@@ -807,7 +812,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
         return np.sum(np.log2(1 + np.hstack(self.calc_SINR())))
 
     # noinspection PyPep8
-    def _calc_Bkl_cov_matrix_first_part(self, k):
+    def _calc_Bkl_cov_matrix_first_part(self, k: int) -> np.ndarray:
         """
         Calculates the first part in the equation of the Blk covariance matrix
         in equation (28) of [Cadambe2008]_.
@@ -843,7 +848,7 @@ class IASolverBaseClass:  # pylint: disable=R0902
         return first_part
 
     # noinspection PyPep8
-    def _calc_Bkl_cov_matrix_second_part(self, k, l):
+    def _calc_Bkl_cov_matrix_second_part(self, k: int, l: int) -> np.ndarray:
         """
         Calculates the second part in the equation of the Blk covariance matrix
         in equation (28) of [Cadambe2008]_ (note that it does not include
@@ -876,7 +881,10 @@ class IASolverBaseClass:  # pylint: disable=R0902
         return second_part
 
     # noinspection PyPep8
-    def _calc_Bkl_cov_matrix_all_l(self, k, noise_power=None):
+    def _calc_Bkl_cov_matrix_all_l(self,
+                                   k: int,
+                                   noise_power: Optional[float] = None
+                                   ) -> np.ndarray:
         """
         Calculates the interference-plus-noise covariance matrix for all
         streams at receiver :math:`k` according to equation (28) in
@@ -936,7 +944,9 @@ class IASolverBaseClass:  # pylint: disable=R0902
 
         return Bkl_all_l
 
-    def _calc_SINR_k(self, k, Bkl_all_l):
+    def _calc_SINR_k(self, k: int,
+                     Bkl_all_l: Union[List[np.ndarray], np.ndarray]
+                     ) -> np.ndarray:
         """
         Calculates the SINR of all streams of user 'k'.
 
@@ -966,14 +976,15 @@ class IASolverBaseClass:  # pylint: disable=R0902
             aux = np.dot(Ukl_H, np.dot(Hkk, Vkl))
             numerator = np.dot(aux, aux.transpose().conjugate())
             denominator = np.dot(Ukl_H, np.dot(Bkl_all_l[l], Ukl))
-            SINR_kl = np.asscalar(numerator) / np.asscalar(denominator)
+            SINR_kl = numerator.item() / denominator.item()
             # The imaginary part should be negligible
             SINR_k[l] = np.abs(SINR_kl)
 
         return SINR_k
 
     @abstractmethod
-    def solve(self, Ns, P=None):  # pragma: no cover
+    def solve(self, Ns: Union[int, np.ndarray],
+              P: Optional[np.ndarray] = None):  # pragma: no cover
         """
         Find the IA solution.
 

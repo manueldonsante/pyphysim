@@ -43,7 +43,7 @@ def calc_principal_angles(matrix1, matrix2):
     >>> A = np.array([[1, 2], [3, 4], [5, 6]])
     >>> B = np.array([[1, 5], [3, 7], [5, -1]])
     >>> print(calc_principal_angles(A, B))
-    [ 0.          0.54312217]
+    [0.         0.54312217]
     """
     # First we need to find the orthogonal basis for matrix1 and
     # matrix2. This can be done with the QR decomposition. Note that if
@@ -102,8 +102,8 @@ def calc_chordal_distance_from_principal_angles(principalAngles):
     >>> A.shape = (4, 2)
     >>> B = np.array([[1.2, 2.1], [2.9, 4.3], [5.2, 6.1], [6.8, 8.1]])
     >>> princ_angles = calc_principal_angles(A, B)
-    >>> print(round(calc_chordal_distance_from_principal_angles(princ_angles), 12))
-    0.473867859572
+    >>> print(round(calc_chordal_distance_from_principal_angles(princ_angles), 8))
+    0.47386786
     """
     # noinspection PyTypeChecker
     summation = np.asscalar(np.sum(np.sin(principalAngles)**2))
@@ -141,7 +141,7 @@ def calc_chordal_distance(matrix1, matrix2):
     >>> A.shape = (4, 2)
     >>> B = np.array([[1.2, 2.1], [2.9, 4.3], [5.2, 6.1], [6.8, 8.1]])
     >>> print(calc_chordal_distance(A, B))
-    0.473867859572
+    0.47386785957231153
     """
     Q1 = np.linalg.qr(matrix1)[0]
     Q2 = np.linalg.qr(matrix2)[0]
@@ -186,7 +186,7 @@ def calc_chordal_distance_2(matrix1, matrix2):
     >>> A.shape = (4, 2)
     >>> B = np.array([[1.2, 2.1], [2.9, 4.3], [5.2, 6.1], [6.8, 8.1]])
     >>> print(calc_chordal_distance_2(A, B))
-    0.473867859572
+    0.47386785957231486
     """
     return (np.linalg.norm(
         calcProjectionMatrix(matrix1) - calcProjectionMatrix(matrix2), 'fro') /

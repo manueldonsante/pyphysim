@@ -12,7 +12,7 @@ try:
 except ImportError:  # pragma: no cover
     _MATPLOTLIB_AVAILABLE = False
 
-from collections.abs import Iterable
+from collections.abc import Iterable
 import numpy as np
 import itertools
 from io import BytesIO

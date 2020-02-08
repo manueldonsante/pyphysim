@@ -59,7 +59,7 @@ def gmd(U, S, V_H, tol=0.0):
 
     # l = min(m, n)
     # noinspection PyTypeChecker
-    p = np.asscalar(np.sum(S >= tol))  # Number of singular values >= tol
+    p = np.sum(S >= tol).item()  # Number of singular values >= tol
 
     # If there is no singular value greater then the tolerance, then we
     # return nothing
@@ -598,8 +598,7 @@ def least_right_singular_vectors(A, n):
            [ 0.01889071, -0.5845124 ],
            [ 0.78166296, -0.49723869]])
     >>> S
-    array([ 1.88354706,  9.81370681])
-
+    array([1.88354706, 9.81370681])
     """
     # Note that numpy.linalg.svd returns the hermitian of V
     [_, S, V_H] = np.linalg.svd(A, full_matrices=True)
@@ -1168,10 +1167,10 @@ def calc_shannon_sum_capacity(sinrs):
     >>> calc_shannon_sum_capacity(11.4)
     3.6322682154995127
     >>> calc_shannon_sum_capacity(20.3)
-    4.4127815253384757
+    4.412781525338476
     >>> sinrs_linear = np.array([11.4, 20.3])
     >>> print(calc_shannon_sum_capacity(sinrs_linear))
-    8.04504974084
+    8.045049740837989
     """
     sum_capacity = np.sum(np.log2(1 + sinrs))
 

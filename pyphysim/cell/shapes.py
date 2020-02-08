@@ -70,7 +70,7 @@ class Coordinate:
 
     # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-    def calc_dist(self, other: Coordinate) -> float:
+    def calc_dist(self, other: "Coordinate") -> float:
         """
         Calculates the distance to another coordinate.
 

@@ -665,7 +665,7 @@ class IterativeIASolverBaseClass(IASolverBaseClass):
                 if cond > 1e4:
                     mod_users.append(k)
                     # [U, S, V_H] = np.linalg.svd(self._F[k])
-                    max_sing_value = np.asscalar(S.max())
+                    max_sing_value = S.max().item()
                     # Calculate the number of significative singular
                     # values. Basically, any singular value (and
                     # corresponding dimension) lower then
