@@ -17,7 +17,8 @@ __all__ = [
 # have different sizes. At least obtaining the chordal distance from the
 # principal angles does not work when matrix1 and matrix2 have different
 # shapes.
-def calc_principal_angles(matrix1, matrix2):
+def calc_principal_angles(matrix1: np.ndarray,
+                          matrix2: np.ndarray) -> np.ndarray:
     """
     Calculates the principal angles between `matrix1` and `matrix2`.
 
@@ -73,7 +74,8 @@ def calc_principal_angles(matrix1, matrix2):
 
 
 # noinspection PyPep8
-def calc_chordal_distance_from_principal_angles(principalAngles):
+def calc_chordal_distance_from_principal_angles(principalAngles: np.ndarray
+                                                ) -> float:
     """
     Calculates the chordal distance from the principal angles.
 
@@ -106,11 +108,11 @@ def calc_chordal_distance_from_principal_angles(principalAngles):
     0.47386786
     """
     # noinspection PyTypeChecker
-    summation = np.asscalar(np.sum(np.sin(principalAngles)**2))
+    summation = (np.sum(np.sin(principalAngles)**2)).item()
     return math.sqrt(summation)
 
 
-def calc_chordal_distance(matrix1, matrix2):
+def calc_chordal_distance(matrix1: np.ndarray, matrix2: np.ndarray) -> float:
     """
     Calculates the chordal distance between the two matrices
 
@@ -155,7 +157,7 @@ def calc_chordal_distance(matrix1, matrix2):
     return np.linalg.norm(Q1_sqr - Q2_sqr, 'fro') / math.sqrt(2.)
 
 
-def calc_chordal_distance_2(matrix1, matrix2):
+def calc_chordal_distance_2(matrix1: np.ndarray, matrix2: np.ndarray) -> float:
     """
     Calculates the chordal distance between the two matrices
 

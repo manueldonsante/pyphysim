@@ -12,6 +12,8 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 import math
 import warnings
+from typing import Optional
+
 from pyphysim.util.misc import gmd
 from pyphysim.util.conversion import linear2dB
 
@@ -28,7 +30,11 @@ __all__ = [
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # xxxxxxxxxxxxxxx Functions to calculate the SINRs xxxxxxxxxxxxxxxxxxxxxxxx
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-def calc_post_processing_SINRs(channel, W, G_H, noise_var=None):
+def calc_post_processing_SINRs(channel: np.ndarray,
+                               W: np.ndarray,
+                               G_H: np.ndarray,
+                               noise_var: Optional[float] = None
+                               ) -> np.ndarray:
     """
     Calculate the post processing SINRs (in dB) of all streams for a given
     MIMO scheme.
@@ -54,7 +60,11 @@ def calc_post_processing_SINRs(channel, W, G_H, noise_var=None):
         calc_post_processing_linear_SINRs(channel, W, G_H, noise_var))
 
 
-def calc_post_processing_linear_SINRs(channel, W, G_H, noise_var=None):
+def calc_post_processing_linear_SINRs(channel: np.ndarray,
+                                      W: np.ndarray,
+                                      G_H: np.ndarray,
+                                      noise_var: Optional[float] = None
+                                      ) -> np.ndarray:
     """
     Calculate the post processing SINRs (in linear scale) of all streams
     for a given MIMO scheme.
@@ -147,13 +157,13 @@ class MimoBase:
     # 'abstract' must be implemented in a subclass.
     __metaclass__ = ABCMeta
 
-    def __init__(self, channel=None):
+    def __init__(self, channel: Optional[np.ndarray] = None):
         self._channel = channel
 
         if channel is not None:
             self.set_channel_matrix(channel)
 
-    def set_channel_matrix(self, channel):
+    def set_channel_matrix(self, channel: np.ndarray):
         """
         Set the channel matrix.
 
@@ -167,7 +177,7 @@ class MimoBase:
         self._channel = channel
 
     @property
-    def Nt(self):
+    def Nt(self) -> int:
         """
         Get the number of transmit antennas
 
@@ -176,10 +186,11 @@ class MimoBase:
         int
             The number of transmit antennas.
         """
+        assert (self._channel is not None)
         return self._channel.shape[1]
 
     @property
-    def Nr(self):
+    def Nr(self) -> int:
         """
         Get the number of receive antennas
 
@@ -188,10 +199,11 @@ class MimoBase:
         int
             The number of receive antennas.
         """
+        assert (self._channel is not None)
         return self._channel.shape[0]
 
     @staticmethod
-    def _calc_precoder(channel):  # pragma: nocover
+    def _calc_precoder(channel: np.ndarray) -> np.ndarray:  # pragma: nocover
         """
         Calculate the linear precoder for the MIMO scheme, if there is any.
 
@@ -209,7 +221,9 @@ class MimoBase:
             '_calc_precoder still needs to be implemented')
 
     @staticmethod
-    def _calc_receive_filter(channel, noise_var=None):  # pragma: nocover
+    def _calc_receive_filter(channel: np.ndarray,
+                             noise_var: Optional[float] = None
+                             ) -> np.ndarray:  # pragma: nocover
         """
         Calculate the receive filter for the MIMO scheme, if there is any.
 
@@ -229,7 +243,7 @@ class MimoBase:
             '_calc_receive_filter still needs to be implemented')
 
     @abstractmethod
-    def getNumberOfLayers(self):  # pragma: no cover
+    def getNumberOfLayers(self) -> int:  # pragma: no cover
         """
         Get the number of layers of the MIMO scheme.
 
@@ -247,7 +261,7 @@ class MimoBase:
         raise NotImplementedError(m.format(self.__class__.__name__))
 
     @staticmethod
-    def _calcZeroForceFilter(channel):
+    def _calcZeroForceFilter(channel: np.ndarray) -> np.ndarray:
         """
         Calculates the Zero-Force filter to cancel the inter-stream
         interference.
@@ -270,7 +284,7 @@ class MimoBase:
         return np.linalg.pinv(channel)
 
     @staticmethod
-    def _calcMMSEFilter(channel, noise_var):
+    def _calcMMSEFilter(channel: np.ndarray, noise_var: float) -> np.ndarray:
         """
         Calculates the MMSE filter to cancel the inter-stream interference.
 
@@ -293,7 +307,7 @@ class MimoBase:
 
         return W
 
-    def calc_linear_SINRs(self, noise_var):
+    def calc_linear_SINRs(self, noise_var: float) -> np.ndarray:
         """
         Calculate the SINRs (in linear scale) of the multiple streams.
 
@@ -312,7 +326,7 @@ class MimoBase:
         sinrs = calc_post_processing_SINRs(self._channel, W, G_H, noise_var)
         return sinrs
 
-    def calc_SINRs(self, noise_var):
+    def calc_SINRs(self, noise_var: float) -> np.ndarray:
         """
         Calculate the SINRs (in dB) of the multiple streams.
 
@@ -330,7 +344,7 @@ class MimoBase:
 
     # noinspection PyPep8
     @abstractmethod
-    def encode(self, transmit_data):  # pragma: no cover, pylint: disable=W0613
+    def encode(self, transmit_data: np.ndarray) -> np.ndarray:  # pragma: no cover, pylint: disable=W0613
         """
         Method to encode the transmit data array to be transmitted using
         some MIMO scheme. This method must be implemented in a subclass.
@@ -350,7 +364,7 @@ class MimoBase:
 
     # noinspection PyPep8
     @abstractmethod
-    def decode(self, received_data):  # pragma: no cover, pylint: disable=W0613
+    def decode(self, received_data: np.ndarray) -> np.ndarray:  # pragma: no cover, pylint: disable=W0613
         """
         Method to decode the transmit data array to be transmitted using
         some MIMO scheme. This method must be implemented in a subclass.
@@ -395,13 +409,12 @@ class MisoBase(MimoBase):  # pylint: disable=W0223
         antenna. If `channel` is 2D, then the first dimension size must
         be equal to 1.
     """
-
-    def __init__(self, channel=None):
+    def __init__(self, channel: Optional[np.ndarray] = None):
         MimoBase.__init__(self, channel=None)
         if channel is not None:
             self.set_channel_matrix(channel)
 
-    def set_channel_matrix(self, channel):
+    def set_channel_matrix(self, channel: np.ndarray):
         """
         Set the channel matrix.
 
@@ -430,7 +443,7 @@ class MisoBase(MimoBase):  # pylint: disable=W0223
             # self._W and self._G_H will be set to None
             super(MisoBase, self).set_channel_matrix(channel)
 
-    def getNumberOfLayers(self):  # pragma: no cover
+    def getNumberOfLayers(self) -> int:  # pragma: no cover
         """
         Get the number of layers of the MISO scheme.
 
@@ -462,8 +475,7 @@ class Blast(MimoBase):
     channel : np.ndarray
         MIMO channel matrix.
     """
-
-    def __init__(self, channel=None):
+    def __init__(self, channel: Optional[np.ndarray] = None):
         """
         Initialized the Blast object.
 
@@ -477,9 +489,9 @@ class Blast(MimoBase):
             MIMO channel matrix.
         """
         MimoBase.__init__(self, channel)
-        self._noise_var = 0
+        self._noise_var: float = 0.0
 
-    def set_channel_matrix(self, channel):
+    def set_channel_matrix(self, channel: np.ndarray):
         """
         Set the channel matrix.
 
@@ -502,7 +514,7 @@ class Blast(MimoBase):
 
         super(Blast, self).set_channel_matrix(channel)
 
-    def getNumberOfLayers(self):
+    def getNumberOfLayers(self) -> int:
         """
         Get the number of layers of the Blast scheme.
 
@@ -513,7 +525,7 @@ class Blast(MimoBase):
         """
         return self.Nt
 
-    def set_noise_var(self, noise_var):
+    def set_noise_var(self, noise_var: Optional[float]):
         """
         Set the noise variance for the MMSE receive filter.
 
@@ -540,7 +552,7 @@ class Blast(MimoBase):
             raise ValueError('Noise variance must be a non-negative value.')
 
     @staticmethod
-    def _calc_precoder(channel):
+    def _calc_precoder(channel: np.ndarray) -> np.ndarray:
         """
         Calculate the linear precoder for the BLAST scheme.
 
@@ -562,7 +574,8 @@ class Blast(MimoBase):
         return np.eye(Nt) / math.sqrt(Nt)
 
     @staticmethod
-    def _calc_receive_filter(channel, noise_var=None):
+    def _calc_receive_filter(channel: np.ndarray,
+                             noise_var: Optional[float] = None) -> np.ndarray:
         """
         Calculate the receive filter for the MIMO scheme, if there is any.
 
@@ -592,7 +605,7 @@ class Blast(MimoBase):
 
         return G_H * math.sqrt(Nt)
 
-    def encode(self, transmit_data):
+    def encode(self, transmit_data: np.ndarray) -> np.ndarray:
         """
         Encode the transmit data array to be transmitted using the BLAST
         scheme.
@@ -626,7 +639,7 @@ class Blast(MimoBase):
             (nStreams, -1), order='F') / math.sqrt(self.Nt))
         return encoded_data
 
-    def decode(self, received_data):
+    def decode(self, received_data: np.ndarray) -> np.ndarray:
         """
         Decode the received data array.
 
@@ -665,13 +678,12 @@ class MRT(MisoBase):
         MISO channel vector. It must be a 1D numpy array, where the
         number of receive antennas is assumed to be equal to 1.
     """
-
-    def __init__(self, channel=None):
+    def __init__(self, channel: Optional[np.ndarray] = None):
         MisoBase.__init__(self, channel)
 
     # noinspection PyUnresolvedReferences
     @staticmethod
-    def _calc_precoder(channel):
+    def _calc_precoder(channel: np.ndarray) -> np.ndarray:
         """
         Calculate the linear precoder for the MRT scheme.
 
@@ -696,7 +708,8 @@ class MRT(MisoBase):
         return W
 
     @staticmethod
-    def _calc_receive_filter(channel, noise_var=None):
+    def _calc_receive_filter(channel: np.ndarray,
+                             noise_var: Optional[float] = None) -> np.ndarray:
         """
         Calculate the receive filter for the MRT scheme.
 
@@ -716,7 +729,7 @@ class MRT(MisoBase):
         G_H = math.sqrt(Nt) / np.sum(np.abs(channel))
         return G_H
 
-    def encode(self, transmit_data):
+    def encode(self, transmit_data: np.ndarray) -> np.ndarray:
         """
         Encode the transmit data array to be transmitted using the MRT
         scheme.
@@ -747,7 +760,7 @@ class MRT(MisoBase):
         encoded_data = (W * x)
         return encoded_data
 
-    def decode(self, received_data):
+    def decode(self, received_data: np.ndarray) -> np.ndarray:
         """
         Decode the received data array.
 
@@ -790,11 +803,10 @@ class MRC(Blast):
     channel : np.ndarray
         MIMO channel matrix.
     """
-
-    def __init__(self, channel=None):
+    def __init__(self, channel: Optional[np.ndarray] = None):
         Blast.__init__(self, channel)
 
-    def set_channel_matrix(self, channel):
+    def set_channel_matrix(self, channel: np.ndarray):
         """
         Set the channel matrix.
 
@@ -826,12 +838,11 @@ class SVDMimo(Blast):
     channel : np.ndarray
         MIMO channel matrix.
     """
-
-    def __init__(self, channel=None):
+    def __init__(self, channel: Optional[np.ndarray] = None):
         Blast.__init__(self, channel)
 
     @staticmethod
-    def _calc_precoder(channel):
+    def _calc_precoder(channel: np.ndarray) -> np.ndarray:
         """
         Calculate the linear precoder for the SVD MIMO scheme.
 
@@ -857,7 +868,8 @@ class SVDMimo(Blast):
         return W
 
     @staticmethod
-    def _calc_receive_filter(channel, noise_var=None):
+    def _calc_receive_filter(channel: np.ndarray,
+                             noise_var: Optional[float] = None) -> np.ndarray:
         """
         Calculate the receive filter for the SVD MIMO scheme.
 
@@ -878,7 +890,7 @@ class SVDMimo(Blast):
         G_H = np.diag(1. / S).dot(U.conj().T) * math.sqrt(Nt)
         return G_H
 
-    def encode(self, transmit_data):
+    def encode(self, transmit_data: np.ndarray) -> np.ndarray:
         """
         Encode the transmit data array to be transmitted using the SVD MIMO
         scheme.
@@ -910,7 +922,7 @@ class SVDMimo(Blast):
 
         return encoded_data
 
-    def decode(self, received_data):
+    def decode(self, received_data: np.ndarray) -> np.ndarray:
         """
         Perform the decoding of the received_data for the SVD MIMO
         scheme with the channel `channel`.
@@ -930,7 +942,7 @@ class SVDMimo(Blast):
         decoded_data = G_H.dot(received_data)
 
         # Return the decoded data as a 1D numpy array
-        return decoded_data.reshape(decoded_data.size,)
+        return decoded_data.reshape(decoded_data.size, )
 
 
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -945,20 +957,13 @@ class GMDMimo(Blast):
     channel : np.ndarray
         MIMO channel matrix.
     """
-
-    def __init__(self, channel=None):
+    def __init__(self, channel: Optional[np.ndarray] = None):
         Blast.__init__(self, channel)
 
     @staticmethod
-    def _calc_precoder(channel):
+    def _calc_precoder(channel: np.ndarray) -> np.ndarray:
         """
-        Calculate the linear precoder for the MRT scheme.
-
-        The MRT scheme corresponds to multiplying the symbol from each
-        transmit antenna with a complex number corresponding to the inverse
-        of the phase of the channel so as to ensure that the signals add
-        constructively at the receiver. This also means that the MRT scheme
-        only be applied to scenarios with a single receive antenna.
+        Calculate the linear precoder for the GMD scheme.
 
         Parameters
         ----------
@@ -979,7 +984,8 @@ class GMDMimo(Blast):
         return W
 
     @staticmethod
-    def _calc_receive_filter(channel, noise_var=None):
+    def _calc_receive_filter(channel: np.ndarray,
+                             noise_var: Optional[float] = None) -> np.ndarray:
         """
         Calculate the receive filter for the MRT scheme.
 
@@ -1003,7 +1009,7 @@ class GMDMimo(Blast):
         G_H = Blast._calc_receive_filter(channel_eq, noise_var)
         return G_H
 
-    def encode(self, transmit_data):
+    def encode(self, transmit_data: np.ndarray) -> np.ndarray:
         """
         Encode the transmit data array to be transmitted using the GMD MIMO
         scheme.
@@ -1040,7 +1046,7 @@ class GMDMimo(Blast):
 
         return encoded_data
 
-    def decode(self, received_data):
+    def decode(self, received_data: np.ndarray) -> np.ndarray:
         """
         Perform the decoding of the received_data for the GMD MIMO.
 
@@ -1072,12 +1078,11 @@ class Alamouti(MimoBase):
     channel : np.ndarray
         MIMO channel matrix.
     """
-
-    def __init__(self, channel=None):
+    def __init__(self, channel: Optional[np.ndarray] = None):
         MimoBase.__init__(self, channel)
 
     @staticmethod
-    def _calc_precoder(channel):  # pragma: nocover
+    def _calc_precoder(channel: np.ndarray) -> np.ndarray:  # pragma: nocover
         """
         Not defined.
 
@@ -1087,7 +1092,9 @@ class Alamouti(MimoBase):
         raise RuntimeError("Alamouti scheme has no linear precoder")
 
     @staticmethod
-    def _calc_receive_filter(channel, noise_var=None):  # pragma: nocover
+    def _calc_receive_filter(channel: np.ndarray,
+                             noise_var: Optional[float] = None
+                             ) -> np.ndarray:  # pragma: nocover
         """
         Not defined.
 
@@ -1098,7 +1105,7 @@ class Alamouti(MimoBase):
         raise RuntimeError("Alamouti scheme has no linear receive filter that"
                            " can be directly applied to the received data")
 
-    def set_channel_matrix(self, channel):
+    def set_channel_matrix(self, channel: np.ndarray):
         """
         Set the channel matrix.
 
@@ -1121,7 +1128,7 @@ class Alamouti(MimoBase):
                 raise ValueError(msg)
             super(Alamouti, self).set_channel_matrix(channel)
 
-    def getNumberOfLayers(self):
+    def getNumberOfLayers(self) -> int:
         """
         Get the number of layers of the Alamouti scheme.
 
@@ -1135,7 +1142,7 @@ class Alamouti(MimoBase):
         """
         return 1
 
-    def calc_linear_SINRs(self, noise_var):
+    def calc_linear_SINRs(self, noise_var: float) -> np.ndarray:
         """
         Calculate the SINRs (in linear scale) of the multiple streams.
 
@@ -1156,7 +1163,7 @@ class Alamouti(MimoBase):
         return sinr
 
     @staticmethod
-    def _encode(transmit_data):
+    def _encode(transmit_data: np.ndarray) -> np.ndarray:
         """
         Perform the Alamouti encoding, but without dividing the power among
         the transmit antennas.
@@ -1188,7 +1195,7 @@ class Alamouti(MimoBase):
             encoded_data[1, n + 1] = (transmit_data[n]).conjugate()
         return encoded_data
 
-    def encode(self, transmit_data):
+    def encode(self, transmit_data: np.ndarray) -> np.ndarray:
         """
         Perform the Alamouti encoding.
 
@@ -1205,7 +1212,7 @@ class Alamouti(MimoBase):
         return self._encode(transmit_data) / math.sqrt(2)
 
     @staticmethod
-    def _decode(received_data, channel):
+    def _decode(received_data: np.ndarray, channel: np.ndarray) -> np.ndarray:
         """
         Perform the decoding of the received_data for the Alamouti
         scheme with the channel `channel`, but does not compensate for
@@ -1259,7 +1266,7 @@ class Alamouti(MimoBase):
         decoded_data /= np.linalg.norm(channel, 'fro')**2
         return decoded_data
 
-    def decode(self, received_data):
+    def decode(self, received_data: np.ndarray) -> np.ndarray:
         """
         Perform the decoding of the received_data for the Alamouti
         scheme with the channel `channel`.

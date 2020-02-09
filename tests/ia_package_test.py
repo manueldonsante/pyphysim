@@ -23,7 +23,7 @@ except NameError:  # pragma: no cover
 try:
     import cPickle as pickle
 except ImportError as e:  # pragma: no cover
-    import pickle
+    import pickle  # type: ignore
 
 import unittest
 import doctest
@@ -1096,7 +1096,6 @@ class ClosedFormIASolverTestCase(unittest.TestCase):
         sum_capacity1 = np.sum(np.log2(1 + np.hstack(SINRs)))
         # Sum Capacity using the first initialization
         sum_capacity2 = np.sum(np.log2(1 + np.hstack(SINRs2)))
-
         self.assertTrue(sum_capacity1 >= sum_capacity2)
 
     def test_full_W_H_property(self):
@@ -2383,7 +2382,8 @@ class MinLeakageIASolverTestCase(unittest.TestCase):
         Q2 = self.iasolver.calc_Q(2)
         W2 = self.iasolver._W[2]
         expected_cost = np.trace(
-            np.abs(W0.T.conj() @ Q0 @ W0 + W1.T.conj() @ Q1 @ W1 + W2.T.conj() @ Q2 @ W2))
+            np.abs(W0.T.conj() @ Q0 @ W0 + W1.T.conj() @ Q1 @ W1 +
+                   W2.T.conj() @ Q2 @ W2))
         self.assertAlmostEqual(expected_cost, self.iasolver.get_cost())
 
         self.iasolver._step()
@@ -2394,7 +2394,8 @@ class MinLeakageIASolverTestCase(unittest.TestCase):
         Q2 = self.iasolver.calc_Q(2)
         W2 = self.iasolver._W[2]
         expected_cost2 = np.trace(
-            np.abs(W0.T.conj() @ Q0 @ W0 + W1.T.conj() @ Q1 @ W1 + W2.T.conj() @ Q2 @ W2))
+            np.abs(W0.T.conj() @ Q0 @ W0 + W1.T.conj() @ Q1 @ W1 +
+                   W2.T.conj() @ Q2 @ W2))
         self.assertAlmostEqual(expected_cost2, self.iasolver.get_cost())
 
         self.assertTrue(expected_cost2 < expected_cost)

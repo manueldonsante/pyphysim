@@ -3,6 +3,7 @@
 """Module with Sounding Reference Signal (SRS) related functions"""
 
 import numpy as np
+from typing import Optional
 
 from pyphysim.reference_signals.srs import UeSequence
 from .zadoffchu import get_shifted_root_seq
@@ -14,7 +15,7 @@ __all__ = ['get_dmrs_seq', 'DmrsUeSequence']
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # xxxxxxxxxxxxxxx Module Functions xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-def get_dmrs_seq(root_seq, n_cs):
+def get_dmrs_seq(root_seq: np.ndarray, n_cs: int) -> np.ndarray:
     """
     Get the shifted root sequence suitable as the DMRS sequence of a user.
 
@@ -60,17 +61,21 @@ class DmrsUeSequence(UeSequence):
     normalize : bool
         True if the reference signal should be normalized. False otherwise.
     """
-
-    def __init__(self, root_seq, n_cs, cover_code=None, normalize=False):
+    def __init__(self,
+                 root_seq: RootSequence,
+                 n_cs: int,
+                 cover_code: Optional[np.ndarray] = None,
+                 normalize: bool = False):
         root_seq_array = root_seq.seq_array()
         user_seq_array = get_dmrs_seq(root_seq_array, n_cs)
 
         # Orthogonal Cover Code. This is stored in an attribute only for
         # visualization purposes, since the stored user_seq_array will
         # already include its effect.
-        self._occ = cover_code = cover_code
+        self._occ = cover_code
 
         if cover_code is not None:
+            assert (isinstance(self._occ, np.ndarray))
             self._occ.flags.writeable = False
             user_seq_array = user_seq_array * cover_code[:, np.newaxis]
 
@@ -80,12 +85,12 @@ class DmrsUeSequence(UeSequence):
                                              normalize=normalize)
 
     @property
-    def cover_code(self):
+    def cover_code(self) -> np.ndarray:
         """Return the cover code."""
         return self._occ
 
     @property
-    def size(self):
+    def size(self) -> int:
         """
         Return the size of the reference signal sequence.
 
@@ -99,7 +104,7 @@ class DmrsUeSequence(UeSequence):
         else:
             return self._user_seq_array.shape[1]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Get the representation of the object.
 

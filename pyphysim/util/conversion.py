@@ -4,7 +4,7 @@
 linear to dB, binary to gray code, as well as the inverse of them.
 """
 
-from typing import Union, Optional
+from typing import Union, Optional, TypeVar
 import numpy as np
 from .misc import xor
 
@@ -14,11 +14,14 @@ __all__ = [
     'SNR_dB_to_EbN0_dB', 'EbN0_dB_to_SNR_dB'
 ]
 
+NumberOrArray = TypeVar("NumberOrArray", float, np.ndarray)
+IntOrIntArray = TypeVar("IntOrIntArray", int, np.ndarray)
 
-def single_matrix_to_matrix_of_matrices(single_matrix: np.ndarray,
-                                        nrows: Optional[np.ndarray] = None,
-                                        ncols: Optional[np.ndarray] = None
-                                        ) -> np.ndarray:
+
+def single_matrix_to_matrix_of_matrices(
+        single_matrix: np.ndarray,
+        nrows: Optional[np.ndarray] = None,
+        ncols: Optional[np.ndarray] = None) -> np.ndarray:
     """
     Converts a single numpy array to a numpy array of numpy arrays.
 
@@ -132,8 +135,7 @@ def single_matrix_to_matrix_of_matrices(single_matrix: np.ndarray,
         return output
 
 
-def dB2Linear(valueIndB: Union[int, float, np.ndarray]
-              ) -> Union[float, np.ndarray]:
+def dB2Linear(valueIndB: NumberOrArray) -> NumberOrArray:
     """
     Convert input from dB to linear scale.
 
@@ -155,8 +157,7 @@ def dB2Linear(valueIndB: Union[int, float, np.ndarray]
     return pow(10, valueIndB / 10.0)
 
 
-def linear2dB(valueInLinear: Union[int, float, np.ndarray]
-              ) -> Union[float, np.ndarray]:
+def linear2dB(valueInLinear: NumberOrArray) -> NumberOrArray:
     """
     Convert input from linear to dB scale.
 
@@ -178,8 +179,7 @@ def linear2dB(valueInLinear: Union[int, float, np.ndarray]
     return 10.0 * np.log10(valueInLinear)
 
 
-def dBm2Linear(valueIndBm: Union[int, float, np.ndarray]
-               ) -> Union[float, np.ndarray]:
+def dBm2Linear(valueIndBm: NumberOrArray) -> NumberOrArray:
     """
     Convert input from dBm to linear scale.
 
@@ -201,8 +201,7 @@ def dBm2Linear(valueIndBm: Union[int, float, np.ndarray]
     return dB2Linear(valueIndBm) / 1000.
 
 
-def linear2dBm(valueInLinear: Union[int, float, np.ndarray]
-               ) -> Union[float, np.ndarray]:
+def linear2dBm(valueInLinear: NumberOrArray) -> NumberOrArray:
     """
     Convert input from linear to dBm scale.
 
@@ -226,7 +225,7 @@ def linear2dBm(valueInLinear: Union[int, float, np.ndarray]
 
 # Code from wikipedia
 # http://en.wikipedia.org/wiki/Gray_code#Constructing_an_n-bit_Gray_code
-def binary2gray(num: Union[int, np.ndarray]) -> Union[int, np.ndarray]:
+def binary2gray(num: IntOrIntArray) -> IntOrIntArray:
     """
     Convert a number (in decimal format) to the corresponding Gray code
     (still in decimal format).
@@ -249,7 +248,7 @@ def binary2gray(num: Union[int, np.ndarray]) -> Union[int, np.ndarray]:
     return xor((num >> 1), num)
 
 
-def gray2binary(num: Union[int, np.ndarray]) -> Union[int, np.ndarray]:
+def gray2binary(num: IntOrIntArray) -> IntOrIntArray:
     """
     Convert a number in Gray code (in decimal format) to its original
     value (in decimal format).
@@ -279,8 +278,7 @@ def gray2binary(num: Union[int, np.ndarray]) -> Union[int, np.ndarray]:
     return temp
 
 
-def SNR_dB_to_EbN0_dB(SNR: Union[float, np.ndarray],
-                      bits_per_symb: int) -> Union[float, np.ndarray]:
+def SNR_dB_to_EbN0_dB(SNR: NumberOrArray, bits_per_symb: int) -> NumberOrArray:
     """
     Convert an SNR value (in dB) to the equivalent Eb/N0 value (also in
     dB).
@@ -304,8 +302,8 @@ def SNR_dB_to_EbN0_dB(SNR: Union[float, np.ndarray],
     return EbN0
 
 
-def EbN0_dB_to_SNR_dB(EbN0: Union[float, np.ndarray],
-                      bits_per_symb: int) -> Union[float, np.ndarray]:
+def EbN0_dB_to_SNR_dB(EbN0: NumberOrArray,
+                      bits_per_symb: int) -> NumberOrArray:
     """Convert an Eb/N0 value (in dB) to the equivalent SNR value (also in dB).
 
     Parameters

@@ -19,9 +19,11 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from io import BytesIO
 import cmath
-from typing import Union
+from typing import Optional, TypeVar
 
 __all__ = ['Coordinate', 'Shape', 'Hexagon', 'Rectangle', 'Circle']
+
+ComplexOrArray = TypeVar("ComplexOrArray", complex, np.ndarray)
 
 
 class Coordinate:
@@ -316,7 +318,10 @@ class Shape(Coordinate):
         #                       self.vertices)) == 1
 
     # noinspection PyUnresolvedReferences
-    def get_border_point(self, angle: float, ratio: float) -> complex:  # pylint: disable=R0914
+    def get_border_point(
+            self,
+            angle: float,
+            ratio: Optional[float] = None) -> complex:  # pylint: disable=R0914
         """
         Calculates the coordinate of the point that intercepts the
         border of the shape if we go from the origin with a given angle
@@ -338,6 +343,9 @@ class Shape(Coordinate):
             point will be in the end of the line (touching the shape's
             border)
         """
+        if ratio is None:
+            ratio = 1.0
+
         angle_rad = np.pi * angle / 180.
 
         # Which point we get if we walk a distance of cell radius in the
@@ -501,8 +509,8 @@ class Shape(Coordinate):
         return self._repr_some_format_('svg')
 
     @staticmethod
-    def calc_rotated_pos(cur_pos: Union[complex, np.ndarray],
-                         angle: float) -> Union[complex, np.ndarray]:
+    def calc_rotated_pos(cur_pos: ComplexOrArray,
+                         angle: float) -> ComplexOrArray:
         """
         Rotate the complex numbers in the `cur_pos` array by `angle` (in
         degrees) around the origin.
@@ -736,7 +744,9 @@ class Circle(Shape):
         vertex_positions: np.ndarray = self._radius * np.exp(1j * angles)
         return vertex_positions
 
-    def get_border_point(self, angle: float, ratio: float) -> complex:
+    def get_border_point(self,
+                         angle: float,
+                         ratio: Optional[float] = None) -> complex:
         """
         Calculates the coordinate of the point that intercepts the
         border of the circle if we go from the origin with a given angle
@@ -745,7 +755,7 @@ class Circle(Shape):
         Parameters
         ----------
         angle : float
-            Angle (in degrees)
+            Angle in degrees
         ratio : float
             The ratio from the cell center to the border where the desired
             point is located. It must be a value between 0 and 1.
@@ -758,6 +768,9 @@ class Circle(Shape):
             one the point will be in the end of the line (touching the
             circle's border)
         """
+        if ratio is None:
+            ratio = 1.0
+
         angle_rad = np.pi * angle / 180.
         return self.pos + np.exp(1j * angle_rad) * self.radius * ratio
 
